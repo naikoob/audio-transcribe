@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+google-cloud-speech
+google-cloud-storage
+python-multipart
+jinja2

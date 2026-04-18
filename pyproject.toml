@@ -1,0 +1,17 @@
+[project]
+name = "transcribe"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "google-cloud-speech",
+    "google-cloud-storage",
+    "python-multipart",
+    "jinja2",
+    "pyopenssl",
+    "google-cloud-aiplatform",
+]
+
+[tool.uv]
+dev-dependencies = []

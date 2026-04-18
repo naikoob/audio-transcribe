@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meeting Transcriber</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d0f14;
+      --surface:     #161920;
+      --surface-2:   #1e222d;
+      --border:      #2a2f3d;
+      --accent:      #6366f1;
+      --accent-hover:#4f52d8;
+      --accent-dim:  #2d2f6b;
+      --text:        #e2e4ed;
+      --text-muted:  #6b7280;
+      --error:       #f87171;
+      --success:     #34d399;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem 4rem;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    header p {
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .card + .card { margin-top: 1.25rem; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 1.25rem; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="file"],
+    select,
+    input[type="number"] {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+
+    input[type="file"] { padding: 0.5rem 0.85rem; cursor: pointer; }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      padding-right: 2.25rem;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+
+    .speaker-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(99,102,241,0.05);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+      padding: 0;
+    }
+
+    .drop-zone-icon { font-size: 1.75rem; margin-bottom: 0.4rem; }
+    .drop-zone-text { font-size: 0.9rem; color: var(--text-muted); }
+    .drop-zone-text strong { color: var(--accent); }
+    .drop-zone-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; opacity: 0.7; }
+    #file-name { font-size: 0.85rem; color: var(--success); margin-top: 0.5rem; font-weight: 500; }
+
+    /* ── Button ── */
+    .btn-primary {
+      width: 100%;
+      padding: 0.78rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+    .btn-primary:disabled { background: var(--accent-dim); color: #8b8fd8; cursor: not-allowed; }
+
+    /* ── Status ── */
+    #status-area { margin-top: 1.25rem; display: none; }
+
+    .status-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: 8px;
+      color: var(--error);
+      font-size: 0.88rem;
+    }
+
+    /* ── Transcript ── */
+    .transcript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .transcript-header h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .btn-ghost {
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      width: auto;
+    }
+    .btn-ghost:hover { background: var(--border); color: var(--text); }
+
+    .segment {
+      display: flex;
+      gap: 0.85rem;
+      margin-bottom: 1.1rem;
+      align-items: flex-start;
+    }
+
+    .speaker-chip {
+      flex-shrink: 0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      min-width: 82px;
+      text-align: center;
+      margin-top: 3px;
+      letter-spacing: 0.02em;
+    }
+
+    .segment-text {
+      line-height: 1.7;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+
+    /* Speaker palette — muted tones for dark bg */
+    .spk-0 { background: rgba(99,102,241,0.18);  color: #a5b4fc; }
+    .spk-1 { background: rgba(236,72,153,0.15);  color: #f9a8d4; }
+    .spk-2 { background: rgba(52,211,153,0.15);  color: #6ee7b7; }
+    .spk-3 { background: rgba(251,191,36,0.15);  color: #fcd34d; }
+    .spk-4 { background: rgba(248,113,113,0.15); color: #fca5a5; }
+    .spk-5 { background: rgba(56,189,248,0.15);  color: #7dd3fc; }
+    .spk-6 { background: rgba(167,139,250,0.18); color: #c4b5fd; }
+    .spk-7 { background: rgba(74,222,128,0.15);  color: #86efac; }
+    .spk-8 { background: rgba(253,186,116,0.15); color: #fdba74; }
+    .spk-9 { background: rgba(129,140,248,0.15); color: #a5b4fc; }
+
+    .empty-msg { color: var(--text-muted); font-size: 0.9rem; padding: 0.5rem 0; }
+
+    /* ── Engine toggle ── */
+    .engine-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .engine-option { position: relative; }
+
+    .engine-option input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+
+    .engine-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.75rem 0.5rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      text-align: center;
+    }
+
+    .engine-label:hover { border-color: var(--accent); }
+
+    .engine-option input[type="radio"]:checked + .engine-label {
+      border-color: var(--accent);
+      background: rgba(99,102,241,0.1);
+    }
+
+    .engine-label-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .engine-label-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-7 10a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V20h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.07A7 7 0 0 1 5 11z"/>
+        </svg>
+      </div>
+      <h1>Meeting Transcriber</h1>
+    </div>
+    <p>Speaker-labelled transcripts powered by Google Chirp 3 and Gemini</p>
+  </header>
+
+  <div class="card">
+    <form id="upload-form">
+
+      <div class="form-group">
+        <label>Audio File</label>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file" name="file" accept=".mp3,.wav,.flac,.ogg,.m4a,.webm" required />
+          <div class="drop-zone-icon">🎙️</div>
+          <div class="drop-zone-text"><strong>Click to upload</strong> or drag &amp; drop</div>
+          <div class="drop-zone-hint">MP3 · WAV · FLAC · OGG · M4A · WebM</div>
+          <div id="file-name"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Transcription Engine</label>
+        <div class="engine-toggle">
+          <div class="engine-option">
+            <input type="radio" id="engine-chirp3" name="engine" value="chirp3" checked />
+            <label class="engine-label" for="engine-chirp3">
+              <span class="engine-label-name">Chirp 3</span>
+              <span class="engine-label-desc">Google Speech-to-Text</span>
+            </label>
+          </div>
+          <div class="engine-option">
+            <input type="radio" id="engine-gemini" name="engine" value="gemini" />
+            <label class="engine-label" for="engine-gemini">
+              <span class="engine-label-name">Gemini 2.5 Flash</span>
+              <span class="engine-label-desc">Multimodal AI</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="language_code">Meeting Language</label>
+        <select id="language_code" name="language_code" required>
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="es-ES">Spanish (Spain)</option>
+          <option value="es-US">Spanish (Latin America)</option>
+          <option value="fr-FR">French</option>
+          <option value="de-DE">German</option>
+          <option value="pt-BR">Portuguese (Brazil)</option>
+          <option value="pt-PT">Portuguese (Portugal)</option>
+          <option value="it-IT">Italian</option>
+          <option value="nl-NL">Dutch</option>
+          <option value="pl-PL">Polish</option>
+          <option value="ru-RU">Russian</option>
+          <option value="sv-SE">Swedish</option>
+          <option value="tr-TR">Turkish</option>
+          <option value="ar-SA">Arabic</option>
+          <option value="hi-IN">Hindi</option>
+          <option value="ja-JP">Japanese</option>
+          <option value="ko-KR">Korean</option>
+          <option value="cmn-Hans-CN">Mandarin Chinese (Simplified)</option>
+          <option value="cmn-Hant-TW">Mandarin Chinese (Traditional)</option>
+          <option value="id-ID">Indonesian</option>
+          <option value="vi-VN">Vietnamese</option>
+          <option value="th-TH">Thai</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Expected Number of Speakers</label>
+        <div class="speaker-row">
+          <div>
+            <label for="min_speakers" style="text-transform:none; letter-spacing:0; font-size:0.8rem;">Minimum</label>
+            <input type="number" id="min_speakers" name="min_speakers" value="1" min="1" max="10" />
+          </div>
+          <div>
+            <label for="max_speakers" style="text-transform:none; letter-spacing:0; font-size:0.8rem;">Maximum</label>
+            <input type="number" id="max_speakers" name="max_speakers" value="6" min="1" max="10" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <input type="checkbox" id="denoise" name="denoise" style="width: 1.1rem; height: 1.1rem; cursor: pointer;" />
+        <label for="denoise" style="margin-bottom: 0; cursor: pointer; text-transform: none; letter-spacing: 0; font-size: 0.9rem; color: var(--text);">
+          Reduce Background Noise
+        </label>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn">Transcribe Meeting</button>
+    </form>
+
+    <div id="status-area">
+      <div class="section-divider"></div>
+      <div class="status-row">
+        <div class="spinner" id="spinner"></div>
+        <span id="status-msg">Uploading audio file…</span>
+      </div>
+      <div class="error-msg" id="error-msg" style="display:none;">
+        <span>⚠️</span><span id="error-text"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="transcript-area" style="display:none;">
+    <div class="transcript-header">
+      <h2>Transcript</h2>
+      <button class="btn-ghost" onclick="downloadTranscript()">↓ Download TXT</button>
+    </div>
+    <div id="transcript-content"></div>
+  </div>
+
+  <script>
+    let transcriptSegments = [];
+    let pollInterval = null;
+
+    const form          = document.getElementById('upload-form');
+    const submitBtn     = document.getElementById('submit-btn');
+    const statusArea    = document.getElementById('status-area');
+    const statusMsg     = document.getElementById('status-msg');
+    const errorMsg      = document.getElementById('error-msg');
+    const errorText     = document.getElementById('error-text');
+    const spinner       = document.getElementById('spinner');
+    const transcriptArea    = document.getElementById('transcript-area');
+    const transcriptContent = document.getElementById('transcript-content');
+    const dropZone      = document.getElementById('drop-zone');
+    const fileInput     = document.getElementById('file');
+    const fileNameEl    = document.getElementById('file-name');
+
+    // Drag-and-drop styling
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    fileInput.addEventListener('change', () => {
+      fileNameEl.textContent = fileInput.files[0]?.name ?? '';
+    });
+
+    // Speaker → colour index
+    const speakerColorMap = {};
+    let colorCounter = 0;
+    function speakerClass(label) {
+      if (!(label in speakerColorMap)) speakerColorMap[label] = colorCounter++ % 10;
+      return `spk-${speakerColorMap[label]}`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resetUI();
+
+      submitBtn.disabled = true;
+      statusArea.style.display = 'block';
+      statusMsg.textContent = 'Uploading audio file…';
+
+      let opName;
+      try {
+        const res = await fetch('/upload', { method: 'POST', body: new FormData(form) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Upload failed');
+        opName = data.operation_name;
+      } catch (err) {
+        showError(err.message);
+        return;
+      }
+
+      statusMsg.textContent = 'Transcribing… this may take a few minutes for long recordings.';
+      pollInterval = setInterval(() => pollStatus(opName), 5000);
+    });
+
+    async function pollStatus(opName) {
+      try {
+        const res = await fetch(`/status?op=${encodeURIComponent(opName)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Status check failed');
+        if (data.done) {
+          clearInterval(pollInterval);
+          data.error ? showError(`Transcription failed: ${data.error}`) : showTranscript(data.segments);
+        }
+      } catch (err) {
+        clearInterval(pollInterval);
+        showError(err.message);
+      }
+    }
+
+    function showTranscript(segments) {
+      transcriptSegments = segments || [];
+      spinner.style.display = 'none';
+      statusMsg.textContent = '✓ Transcription complete';
+      transcriptArea.style.display = 'block';
+      submitBtn.disabled = false;
+
+      if (!transcriptSegments.length) {
+        transcriptContent.innerHTML = '<p class="empty-msg">No speech detected in the audio.</p>';
+        return;
+      }
+
+      transcriptContent.innerHTML = transcriptSegments.map(seg => `
+        <div class="segment">
+          <span class="speaker-chip ${speakerClass(seg.speaker)}">${escHtml(seg.speaker)}</span>
+          <span class="segment-text">${escHtml(seg.text)}</span>
+        </div>
+      `).join('');
+    }
+
+    function showError(msg) {
+      spinner.style.display = 'none';
+      errorText.textContent = msg;
+      errorMsg.style.display = 'flex';
+      submitBtn.disabled = false;
+    }
+
+    function resetUI() {
+      if (pollInterval) clearInterval(pollInterval);
+      transcriptSegments = [];
+      Object.keys(speakerColorMap).forEach(k => delete speakerColorMap[k]);
+      colorCounter = 0;
+      errorMsg.style.display = 'none';
+      errorText.textContent = '';
+      transcriptArea.style.display = 'none';
+      transcriptContent.innerHTML = '';
+      spinner.style.display = '';
+    }
+
+    function downloadTranscript() {
+      if (!transcriptSegments.length) return;
+      const text = transcriptSegments.map(s => `${s.speaker}:\n${s.text}`).join('\n\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+      a.download = 'transcript.txt';
+      a.click();
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>
