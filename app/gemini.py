@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ID = os.environ["PROJECT_ID"]
 # Gemini is available in many more regions than Chirp 3.
-# us-central1 has full model coverage and is the recommended default.
-GEMINI_LOCATION = os.environ.get("GEMINI_LOCATION", "us-central1")
+# asia-southeast1 has full model coverage and is the recommended default.
+GEMINI_LOCATION = os.environ.get("GEMINI_LOCATION", "asia-southeast1")
 
 # Model identifier for Vertex AI. Check the Vertex AI model garden for the
 # latest stable version: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini

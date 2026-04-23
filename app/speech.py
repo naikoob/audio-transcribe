@@ -18,7 +18,7 @@ Key API decisions documented here:
   rather than writing them to a separate GCS file.
 
 Chirp 3 supported regions (as of 2025):
-  asia-south1, europe-west2, europe-west3, northamerica-northeast1
+  asia-southeast1, europe-west2, europe-west3, northamerica-northeast1
 """
 
 import logging
@@ -30,7 +30,7 @@ from google.cloud.speech_v2.types import cloud_speech
 logger = logging.getLogger(__name__)
 
 PROJECT_ID = os.environ["PROJECT_ID"]
-LOCATION = os.environ.get("LOCATION", "us-central1")
+LOCATION = os.environ.get("LOCATION", "asia-southeast1")
 
 # The Speech-to-Text V2 API uses regional endpoints.
 # Each SpeechClient instance maintains a gRPC connection, so we cache one

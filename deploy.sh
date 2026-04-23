@@ -5,8 +5,8 @@
 #   PROJECT_ID=my-project GCS_BUCKET=my-bucket ./deploy.sh
 #
 # Optional overrides (environment variables):
-#   REGION          Cloud Run region and Chirp 3 region (default: asia-south1)
-#   GEMINI_LOCATION Vertex AI region for Gemini (default: us-central1)
+#   REGION          Cloud Run region and Chirp 3 region (default: asia-southeast1)
+#   GEMINI_LOCATION Vertex AI region for Gemini (default: asia-southeast1)
 #   SERVICE_NAME    Cloud Run service name (default: transcribe)
 #
 # --- One-time prerequisites ---
@@ -40,7 +40,7 @@
 #
 # --- Chirp 3 region availability ---
 # Chirp 3 is only available in select regions (as of 2025):
-#   asia-south1, europe-west2, europe-west3, northamerica-northeast1
+#   asia-southeast1, europe-west2, europe-west3, northamerica-northeast1
 # Verify current availability:
 #   https://cloud.google.com/speech-to-text/v2/docs/locations
 
@@ -48,8 +48,8 @@ set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:?Set PROJECT_ID}"
 GCS_BUCKET="${GCS_BUCKET:?Set GCS_BUCKET}"
-REGION="${REGION:-asia-south1}"
-GEMINI_LOCATION="${GEMINI_LOCATION:-us-central1}"
+REGION="${REGION:-asia-southeast1}"
+GEMINI_LOCATION="${GEMINI_LOCATION:-asia-southeast1}"
 SERVICE_NAME="${SERVICE_NAME:-transcribe}"
 
 echo "Deploying '$SERVICE_NAME' to Cloud Run in $REGION..."

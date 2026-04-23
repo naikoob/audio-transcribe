@@ -51,7 +51,7 @@ A modern, full-stack application for generating speaker-labeled transcripts from
    ```bash
    export PROJECT_ID="your-project-id"
    export GCS_BUCKET="your-bucket-name"
-   export LOCATION="us-central1" # Region for STT V2
+   export LOCATION="asia-southeast1" # Region for STT V2
    ```
 5. **Run the server**:
    ```bash
@@ -72,7 +72,3 @@ The application supports several tuning parameters in `app/speech.py`:
 - `min_speaker_count` / `max_speaker_count`: Helps the diarization engine be more accurate.
 - `denoise_audio`: Toggleable noise reduction for low-quality recordings.
 - `enable_automatic_punctuation`: Automatically adds punctuation to transcripts for better readability.
-
-## 📄 License
-
-MIT
